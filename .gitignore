@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+*.egg-info/
+# Env / secrets
+.env
+.env.*
+!.env.example
+*.pem
+near-credentials/
+# Rust
+contract/target/
+# Node
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/next-env.d.ts
+# OS
+.DS_Store
