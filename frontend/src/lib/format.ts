@@ -47,3 +47,10 @@ export function claimText(c: { metric: string; operator: string; threshold: numb
   if (!c) return "";
   return `${c.target} ${c.metric.replace("_", " ")} ${c.operator} ${pct(c.threshold)}`;
 }
+
+/** Display a NEAR amount string; sub-0.0001 amounts (e.g. 1 yocto) are shown compactly. */
+export function nearAmount(v: string): string {
+  const n = Number(v);
+  if (n > 0 && n < 0.0001) return "<0.0001 Ⓝ";
+  return `${v} Ⓝ`;
+}

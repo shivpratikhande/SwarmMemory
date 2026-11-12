@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { Tx } from "@/lib/api";
-import { clock } from "@/lib/format";
+import { clock, nearAmount } from "@/lib/format";
 import { useConfig, useLive } from "@/lib/hooks";
 
 const METHODS = ["register_agent", "publish_memory", "record_verification", "purchase_memory", "withdraw_rewards", "update_reputation"];
@@ -106,7 +106,7 @@ export default function TransactionsPage() {
                       <StatusBadge status={t.status} />
                       {t.error && <div className="mt-1 max-w-56 truncate text-[11px] text-bad" title={t.error}>{t.error}</div>}
                     </TableCell>
-                    <TableCell className="text-right font-mono text-xs">{Number(t.deposit_near) > 0 ? `${t.deposit_near} Ⓝ` : "—"}</TableCell>
+                    <TableCell className="text-right font-mono text-xs">{Number(t.deposit_near) > 0 ? nearAmount(t.deposit_near) : "—"}</TableCell>
                     <TableCell>
                       <Mono className="text-muted-foreground">{t.memory_id ?? "—"}</Mono>
                     </TableCell>

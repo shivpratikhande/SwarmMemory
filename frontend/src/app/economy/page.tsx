@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { post, type Economy, type Purchase, type Tx } from "@/lib/api";
-import { timeAgo } from "@/lib/format";
+import { nearAmount, timeAgo } from "@/lib/format";
 import { useLive } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 
@@ -164,7 +164,7 @@ export default function EconomyPage() {
               <Mono>{t.method}</Mono>
               <StatusBadge status={t.status} />
               <span className="text-xs text-muted-foreground">{t.signer_id}</span>
-              {Number(t.deposit_near) > 0 && <span className="font-mono text-xs text-chain">{t.deposit_near} Ⓝ</span>}
+              {Number(t.deposit_near) > 0 && <span className="font-mono text-xs text-chain">{nearAmount(t.deposit_near)}</span>}
               <span className="ml-auto">
                 <TxHash hash={t.tx_hash} url={t.explorer_url} />
               </span>
