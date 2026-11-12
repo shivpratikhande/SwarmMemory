@@ -297,3 +297,19 @@ class SimulatedContractState(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     state: Mapped[dict[str, Any]] = mapped_column(JSONB)
     block_height: Mapped[int] = mapped_column(Integer, default=0)
+
+
+class ScenarioRun(Base):
+    """One execution of the end-to-end demonstration scenario."""
+
+    __tablename__ = "scenario_runs"
+
+    id: Mapped[str] = mapped_column(String(40), primary_key=True)
+    status: Mapped[str] = mapped_column(String(24), default="running")  # running|succeeded|failed
+    network: Mapped[str] = mapped_column(String(16))
+    options: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict)
+    steps: Mapped[list[Any]] = mapped_column(JSONB, default=list)
+    summary: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
+    error: Mapped[str | None] = mapped_column(Text)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
