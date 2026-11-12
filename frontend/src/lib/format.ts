@@ -10,7 +10,7 @@ export function timeAgo(iso: string | null | undefined): string {
 
 export function clock(iso: string | null | undefined): string {
   if (!iso) return "—";
-  return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" });
 }
 
 export function shortHash(h: string | null | undefined, n = 6): string {

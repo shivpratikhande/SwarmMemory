@@ -1,5 +1,7 @@
 "use client";
 
+import { LinkIcon } from "lucide-react";
+
 import { AgentGlyph, ChainTag, Empty, StatusBadge, TxHash } from "@/components/bits";
 import type { ActivityEvent } from "@/lib/api";
 import { clock } from "@/lib/format";
@@ -12,11 +14,11 @@ export function ActivityFeed({ events, compact = false }: { events: ActivityEven
     <ol className="relative">
       {events.map((e) => (
         <li key={e.id} className={cn("group flex animate-rise items-start gap-3 border-b border-border/50 py-2.5 last:border-0", compact && "py-2")}>
-          <span className="w-16 shrink-0 pt-0.5 font-mono text-[11px] text-muted-foreground tabular-nums">{clock(e.created_at)}</span>
+          <span className="w-14 shrink-0 pt-0.5 font-mono text-[11px] text-muted-foreground tabular-nums">{clock(e.created_at)}</span>
           <span className="pt-px">
             {e.onchain ? (
-              <span className="grid size-5 place-items-center rounded-md border border-chain/30 bg-chain/10 text-[10px] text-chain" title="Blockchain event">
-                ⛓
+              <span className="grid size-5 place-items-center rounded-md border border-chain/30 bg-chain/10 text-chain" title="Blockchain event">
+                <LinkIcon className="size-3" />
               </span>
             ) : e.agent_id ? (
               <AgentGlyph id={e.agent_id} size="sm" />

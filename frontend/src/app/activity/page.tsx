@@ -17,7 +17,7 @@ export default function ActivityPage() {
     <>
       <PageHeader
         title="Agent Activity Feed"
-        description="Chronological record of the swarm. Blockchain events (⛓) are listed separately from off-chain agent activity and carry their transaction status."
+        description="Chronological record of the swarm. Blockchain events (chain icon) are distinguished separately from off-chain agent activity and carry their transaction status."
         actions={
           <Tabs value={filter} onValueChange={setFilter}>
             <TabsList>
