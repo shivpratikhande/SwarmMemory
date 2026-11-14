@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2Icon } from "lucide-react";
+import { CoinsIcon, Loader2Icon, ShoppingBagIcon, TrendingUpIcon, UsersIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -47,14 +47,15 @@ export default function EconomyPage() {
   return (
     <>
       <PageHeader
+        eyebrow="Ledger"
         title="Network Economy"
-        description="Contributor earnings are credited inside the contract on purchase and withdrawn with a pull-payment pattern (balance zeroed before transfer, restored if the transfer fails)."
+        description="Contributors are credited inside the contract when their memory is bought, and withdraw with a pull payment: the balance is zeroed before the transfer and restored if it fails."
       />
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label="Value moved (confirmed txs)" value={data ? `${data.total_value_moved_near} Ⓝ` : "—"} accent="text-chain" />
-        <Stat label="Memory purchases" value={purchases?.length ?? "—"} />
-        <Stat label="Contributors with earnings" value={data?.agents.filter((a) => Number(a.total_earned_onchain_near ?? 0) > 0).length ?? "—"} />
-        <Stat label="Reputation events" value={data?.reputation_events.length ?? "—"} />
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <Stat label="Value moved" value={data ? `${data.total_value_moved_near} Ⓝ` : "—"} icon={CoinsIcon} tone="chain" hint="Confirmed transactions only" />
+        <Stat label="Memory purchases" value={purchases?.length ?? "—"} icon={ShoppingBagIcon} tone="ember" />
+        <Stat label="Earning contributors" value={data?.agents.filter((a) => Number(a.total_earned_onchain_near ?? 0) > 0).length ?? "—"} icon={UsersIcon} tone="ok" />
+        <Stat label="Reputation events" value={data?.reputation_events.length ?? "—"} icon={TrendingUpIcon} tone="warn" />
       </div>
 
       <Card className="mt-6">
@@ -80,7 +81,7 @@ export default function EconomyPage() {
                 <TableRow key={a.id}>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <AgentGlyph id={a.id} role={a.role} size="sm" /> {a.name}
+                      <AgentGlyph id={a.id} role={a.role} size="sm" /> <span className="font-medium">{a.name.split(" · ")[0]}</span>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -88,10 +89,10 @@ export default function EconomyPage() {
                   </TableCell>
                   <TableCell className="text-right font-mono text-xs">{a.spent_near} Ⓝ</TableCell>
                   <TableCell className="text-right font-mono text-xs">{a.total_earned_onchain_near ?? "—"} Ⓝ</TableCell>
-                  <TableCell className="text-right font-mono text-xs text-chain">{a.claimable_near ?? "—"} Ⓝ</TableCell>
+                  <TableCell className="text-right font-mono text-xs font-medium text-chain">{a.claimable_near ?? "—"} Ⓝ</TableCell>
                   {sim && <TableCell className="text-right font-mono text-xs text-muted-foreground">{a.wallet_balance_near} Ⓝ</TableCell>}
                   <TableCell className="text-right">
-                    <Button size="sm" variant="secondary" disabled={!a.claimable_near || Number(a.claimable_near) === 0 || busy === a.id} onClick={() => withdraw(a.id)}>
+                    <Button size="sm" variant="outline" className="rounded-full" disabled={!a.claimable_near || Number(a.claimable_near) === 0 || busy === a.id} onClick={() => withdraw(a.id)}>
                       {busy === a.id && <Loader2Icon className="animate-spin" />} Withdraw
                     </Button>
                   </TableCell>
@@ -111,15 +112,15 @@ export default function EconomyPage() {
           <CardContent className="space-y-4">
             <ol className="space-y-2">
               {ranked.map((a, i) => (
-                <li key={a.id} className="flex items-center gap-3">
-                  <span className="w-4 font-mono text-xs text-muted-foreground">{i + 1}</span>
+                <li key={a.id} className="flex items-center gap-3 rounded-xl px-2 py-1.5 even:bg-surface/60">
+                  <span className={cn("grid size-6 place-items-center rounded-full text-xs font-semibold", i === 0 ? "bg-primary/15 text-primary" : "bg-muted text-muted-foreground")}>{i + 1}</span>
                   <AgentGlyph id={a.id} role={a.role} size="sm" />
                   <span className="flex-1 text-sm">{a.name}</span>
                   <span className={cn("font-mono text-sm", a.reputation < 0 ? "text-bad" : "text-ok")}>{a.reputation}</span>
                 </li>
               ))}
             </ol>
-            <div className="grid grid-cols-[2.5rem_1fr] gap-x-2 gap-y-1 rounded-md border bg-background/40 p-3 text-xs text-muted-foreground">
+            <div className="grid grid-cols-[2.5rem_1fr] gap-x-2 gap-y-1.5 rounded-xl bg-surface p-3.5 text-xs text-muted-foreground ring-1 ring-border/70">
               {RULES.map(([p, r]) => (
                 <div key={r} className="contents">
                   <span className={cn("font-mono", p.startsWith("+") ? "text-ok" : "text-bad")}>{p}</span>
@@ -159,7 +160,7 @@ export default function EconomyPage() {
         </CardHeader>
         <CardContent className="divide-y">
           {txs?.map((t) => (
-            <div key={t.id} className="flex flex-wrap items-center gap-3 py-2 text-sm">
+            <div key={t.id} className="flex flex-wrap items-center gap-3 py-2.5 text-sm">
               <ChainTag simulated={t.simulated} />
               <Mono>{t.method}</Mono>
               <StatusBadge status={t.status} />

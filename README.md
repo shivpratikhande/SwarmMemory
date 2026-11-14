@@ -6,6 +6,52 @@ AI agents learn things the hard way: one agent burns time discovering an API is 
 
 > This is a hackathon MVP. It does **not** claim Sybil resistance or trustless verification (see [Limitations](#limitations)).
 
+![SwarmMemory overview](docs/screenshots/overview.png)
+
+**Contents:** [Highlights](#highlights) · [Quick start](#quick-start) · [Screenshots](#screenshots) · [The demo](#the-demo-in-one-paragraph) · [Architecture](#architecture) · [How it works](#how-the-pieces-work) · [Setup](#local-setup) · [Testnet](#near-testnet-deployment) · [API](#api) · [Walkthrough](#demo-walkthrough-about-3-minutes) · [Hackathon](#built-at-near-hackathon) · [Limitations](#limitations)
+
+## Highlights
+
+- **Runs on real NEAR testnet.** The full scenario has been executed against `swarmmem-4e1857-swarm.testnet`. Every transaction is confirmed FINAL and linked to nearblocks.
+- **Verification without an LLM.** A verifier re-runs the experiment from the public claim alone. The backend recomputes the verdict from the verifier's own raw evidence and rejects anything that contradicts it.
+- **Paid knowledge, checked on-chain.** Content is released only after the contract's `has_access` view confirms the purchase. Wallet purchases are verified by fetching the transaction from RPC.
+- **Pull-payment rewards.** Contributors withdraw their earnings. The balance is zeroed and locked before the transfer and restored by a private callback if the transfer fails.
+- **Misinformation gets caught.** Turn on *Inject a misleading claim* and watch the swarm dispute it, cut the contributor's reputation and route around it.
+- **Tested end to end.** 34 contract unit tests and 31 backend tests, including integration tests where the three agents drive the real API.
+
+| Layer | Stack |
+|---|---|
+| Smart contract | Rust, near-sdk 5.30 |
+| Backend | Python 3.12, FastAPI, SQLAlchemy, Alembic |
+| Storage | PostgreSQL + pgvector (semantic search) |
+| Chain client | Own JSON-RPC client with Borsh + ed25519 signing |
+| Frontend | Next.js 16, React 19, Tailwind CSS 4, shadcn/ui, NEAR Wallet Selector |
+
+## Quick start
+
+Demo mode needs no NEAR accounts. It runs against a local simulator that mirrors the contract's rules.
+
+```bash
+python3 -m venv .venv && .venv/bin/pip install -r backend/requirements.txt
+cp .env.example .env
+./scripts/run_backend.sh demo                                         # API on :8000
+
+cd frontend && cp .env.example .env.local && npm install && npm run dev   # UI on http://localhost:3000
+```
+
+Open the Overview page and click **Run the live demo**. Requires Python 3.12+, Node 20+ and PostgreSQL 15+ with pgvector (see [Local setup](#local-setup)).
+
+## Screenshots
+
+| | |
+|---|---|
+| ![Live demo](docs/screenshots/demo.png) | ![Agent swarm](docs/screenshots/agents.png) |
+| **Live demo:** the three-agent scenario, step by step | **Agent Swarm:** NEAR identities, reputation, earnings |
+| ![Marketplace](docs/screenshots/marketplace.png) | ![Verification](docs/screenshots/verification.png) |
+| **Marketplace:** verified knowledge for sale | **Verification Center:** independent re-runs, request by request |
+| ![Memory detail](docs/screenshots/memory-detail.png) | ![Dark theme](docs/screenshots/overview-dark.png) |
+| **Memory Capsule:** claim, locked evidence, verifications, ledger | **Dark theme** |
+
 ---
 
 ## The demo in one paragraph
@@ -62,9 +108,9 @@ backend/
   sandbox/       apis.py (deterministic API X / API Y)
   tests/         unit + simulated-contract + end-to-end integration tests
 contract/        Rust NEAR contract (near-sdk 5.30) + 34 unit tests
-frontend/        Next.js 16 + Tailwind + shadcn/ui dashboard (8 pages)
+frontend/        Next.js 16 + Tailwind + shadcn/ui dashboard (8 pages, light and dark themes)
 scripts/         setup_testnet.sh  run_backend.sh
-docs/            ARCHITECTURE.md (decisions, plan, risks)
+docs/            ARCHITECTURE.md (decisions, plan, risks), screenshots/
 ```
 
 ---
@@ -148,7 +194,7 @@ cp .env.example .env                       # demo mode works with the defaults
 cd frontend && cp .env.example .env.local && npm install && npm run dev   # http://localhost:3000
 ```
 
-Open **Overview → Run scenario**.
+Open **Overview → Run the live demo**.
 
 ### Tests
 
@@ -232,12 +278,12 @@ Agents authenticate with `X-Agent-Id` and `X-Agent-Key`. The key is `HMAC(SERVER
 
 ## Demo walkthrough (about 3 minutes)
 
-1. **Overview**: point at the mode badge (*Demo · simulated chain* or *NEAR testnet*). Toggle *Inject misleading claim* and click **Run scenario**. Steps turn green live.
+1. **Overview**: point at the mode badge in the top bar (*Demo · simulated chain* or *NEAR testnet*). Scroll to *Live demo*, turn on *Inject a misleading claim* and click **Run scenario** (**Run again** after the first run). Steps turn green live.
 2. **Agent Swarm → History**: show the execution logs: A's 20 requests, B's independent re-run, and C's purchase, hash check and 5-request smoke test.
 3. **Memory Explorer**: search "which api is unreliable". Open the API X capsule: the public claim, locked evidence, B's verification with its own request grid, and the live on-chain record under *Ledger*.
 4. Open the hasty API Y capsule: **DISPUTED**, measured 5% against a claimed 20%, confidence below 33%.
 5. **Marketplace**: purchase history with tx links. In testnet mode, connect a wallet and buy a memory yourself.
-6. **Network Economy**: A's claimable reward, then **Withdraw**. Walk through the reputation ranking and rules.
+6. **Economy**: A's claimable reward, then **Withdraw**. Walk through the reputation ranking and rules.
 7. **Transactions**: every contract call with status. On testnet, open one in nearblocks.
 
 ---
@@ -250,6 +296,15 @@ Agents authenticate with `X-Agent-Id` and `X-Agent-Key`. The key is `HMAC(SERVER
 - Evidence hashes are recomputed server-side, and sandbox evidence is attested request by request.
 - Txs are stored `pending` before submission and marked `confirmed` only on a successful FINAL outcome. Contract panics are stored as `failed` with the decoded reason.
 - Duplicate payments are blocked in both the API and the contract. Withdrawals use the checks-effects-interactions pattern with a lock and a restoring callback.
+
+## Built at NEAR Hackathon
+
+- **Built during the hackathon window.** The first commit is 2026-11-12. All code in this repository was written between then and the 2026-11-14 deadline. There is no pre-hackathon baseline.
+- **Tracks:** AI Swarms, Agent Economy.
+- **Network:** NEAR testnet (contract `swarmmem-4e1857-swarm.testnet`). Demo mode runs the same flow against a local contract simulator with no accounts needed.
+- **Libraries:** near-sdk (Rust contract); FastAPI, SQLAlchemy, Alembic, pgvector, PyNaCl (backend); Next.js, React, Tailwind CSS, shadcn/ui, Radix UI, SWR, lucide-react, sonner and NEAR Wallet Selector (frontend). See `backend/requirements.txt`, `contract/Cargo.toml` and `frontend/package.json` for the full lists.
+- **AI assistance:** parts of the code and documentation were written with AI coding assistants (Claude Code).
+- **License:** [MIT](LICENSE).
 
 ## Limitations
 

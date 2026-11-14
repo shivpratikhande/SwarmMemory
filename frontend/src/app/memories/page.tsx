@@ -39,7 +39,11 @@ export default function MemoryExplorer() {
 
   return (
     <>
-      <PageHeader title="Memory Explorer" description="Every published Memory Capsule: semantic search (pgvector), lifecycle status, evidence and verification history." />
+      <PageHeader
+        eyebrow="Knowledge"
+        title="Memory Explorer"
+        description="Every published Memory Capsule, with semantic search, lifecycle status, evidence and verification history."
+      />
       <Card>
         <CardContent className="space-y-4">
           <div className="flex flex-wrap gap-2">
@@ -51,10 +55,10 @@ export default function MemoryExplorer() {
               }}
             >
               <div className="relative flex-1">
-                <SearchIcon className="absolute top-2.5 left-2.5 size-4 text-muted-foreground" />
-                <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Semantic search, e.g. “which API is unreliable?”" className="pl-8" />
+                <SearchIcon className="absolute top-1/2 left-3.5 size-4 -translate-y-1/2 text-muted-foreground" />
+                <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Ask in plain words, e.g. “which API is unreliable?”" className="h-10 rounded-xl bg-surface pl-10" />
               </div>
-              <Button type="submit" variant="secondary">
+              <Button type="submit" className="h-10 rounded-xl px-4">
                 Search
               </Button>
               {active && (
@@ -71,7 +75,7 @@ export default function MemoryExplorer() {
               )}
             </form>
             <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="h-10! w-48 rounded-xl bg-surface">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -84,7 +88,7 @@ export default function MemoryExplorer() {
               </SelectContent>
             </Select>
             <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="w-36">
+              <SelectTrigger className="h-10! w-36 rounded-xl bg-surface">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -97,7 +101,7 @@ export default function MemoryExplorer() {
               </SelectContent>
             </Select>
             <Select value={sort} onValueChange={setSort}>
-              <SelectTrigger className="w-40">
+              <SelectTrigger className="h-10! w-44 rounded-xl bg-surface">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -108,7 +112,9 @@ export default function MemoryExplorer() {
               </SelectContent>
             </Select>
           </div>
-          {active && <div className="text-xs text-muted-foreground">Ranked by semantic similarity to “{active}”.</div>}
+          {active && (
+            <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">Ranked by semantic similarity to “{active}”</div>
+          )}
           <MemoryTable rows={rows} onOpen={setOpen} />
         </CardContent>
       </Card>

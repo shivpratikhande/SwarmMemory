@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2Icon, ShieldCheckIcon, ShieldXIcon } from "lucide-react";
+import { FileCheck2Icon, HourglassIcon, Loader2Icon, ShieldCheckIcon, ShieldXIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -40,22 +40,23 @@ export default function VerificationCenter() {
   return (
     <>
       <PageHeader
+        eyebrow="Knowledge"
         title="Verification Center"
-        description="A verification is an independent re-run of the claimed experiment with a fresh run id. The backend re-derives the verdict from the verifier's raw evidence and rejects anything inconsistent."
+        description="Every verification is an independent re-run of the claimed experiment. The backend recomputes the verdict from the verifier's own raw evidence and rejects anything that doesn't add up."
         actions={
-          <Button onClick={() => trigger()} disabled={!!busy || !queue?.length}>
+          <Button onClick={() => trigger()} disabled={!!busy || !queue?.length} className="rounded-full px-4">
             {busy === "all" ? <Loader2Icon className="animate-spin" /> : <ShieldCheckIcon />} Verify pending queue
           </Button>
         }
       />
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label="Awaiting verification" value={queue?.length ?? "—"} accent="text-warn" />
-        <Stat label="Verifications submitted" value={history?.length ?? "—"} />
-        <Stat label="Confirmed" value={confirmed} accent="text-ok" />
-        <Stat label="Disputed memories" value={disputed?.length ?? "—"} accent="text-bad" />
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <Stat label="Awaiting verification" value={queue?.length ?? "—"} icon={HourglassIcon} tone="warn" />
+        <Stat label="Verifications submitted" value={history?.length ?? "—"} icon={FileCheck2Icon} tone="ember" />
+        <Stat label="Confirmed" value={confirmed} icon={ShieldCheckIcon} tone="ok" />
+        <Stat label="Disputed memories" value={disputed?.length ?? "—"} icon={ShieldXIcon} tone="bad" />
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[1.5fr_1fr]">
+      <div className="mt-6 grid gap-6 2xl:grid-cols-[1.6fr_1fr]">
         <Card>
           <CardHeader>
             <CardTitle>Pending & expired memories</CardTitle>
@@ -80,14 +81,14 @@ export default function VerificationCenter() {
           <CardContent className="space-y-2">
             {verifierActivity.length ? (
               verifierActivity.map((e) => (
-                <div key={e.id} className="flex gap-2 text-[13px]">
+                <div key={e.id} className="flex gap-2.5 text-[13px] leading-snug">
                   <AgentGlyph id="agent-b-verifier" size="sm" />
                   <span className="flex-1">{e.message}</span>
                   <span className="shrink-0 text-[11px] text-muted-foreground">{timeAgo(e.created_at)}</span>
                 </div>
               ))
             ) : (
-              <Empty>The verification agent has not run yet.</Empty>
+              <Empty icon={ShieldCheckIcon}>The verification agent has not run yet.</Empty>
             )}
           </CardContent>
         </Card>
@@ -99,9 +100,9 @@ export default function VerificationCenter() {
           <CardDescription>Append-only. Each record carries the verifier&apos;s own request-level evidence and its on-chain record.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          {!history?.length && <Empty>No verifications yet.</Empty>}
+          {!history?.length && <Empty icon={ShieldCheckIcon}>No verifications yet.</Empty>}
           {history?.map((v) => (
-            <div key={v.id} className="grid gap-3 rounded-lg border p-4 md:grid-cols-[1fr_auto]">
+            <div key={v.id} className="grid gap-3 rounded-xl bg-surface/70 p-4 ring-1 ring-border md:grid-cols-[1fr_auto]">
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center gap-2">
                   {v.verification_result === "CONFIRMED" ? <ShieldCheckIcon className="size-4 text-ok" /> : <ShieldXIcon className="size-4 text-bad" />}

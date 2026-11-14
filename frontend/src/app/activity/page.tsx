@@ -16,11 +16,12 @@ export default function ActivityPage() {
   return (
     <>
       <PageHeader
-        title="Agent Activity Feed"
-        description="Chronological record of the swarm. Blockchain events (chain icon) are distinguished separately from off-chain agent activity and carry their transaction status."
+        eyebrow="Network"
+        title="Activity"
+        description="Everything the swarm does, in order. Contract calls are marked with a chain icon and carry their transaction status, separate from off-chain agent work."
         actions={
           <Tabs value={filter} onValueChange={setFilter}>
-            <TabsList>
+            <TabsList className="rounded-full">
               <TabsTrigger value="all">All</TabsTrigger>
               <TabsTrigger value="agents">Agent activity</TabsTrigger>
               <TabsTrigger value="chain">Blockchain events</TabsTrigger>

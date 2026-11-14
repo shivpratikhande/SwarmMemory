@@ -1,12 +1,12 @@
 "use client";
 
-import { CheckCircle2Icon, CircleDashedIcon, Loader2Icon, PlayIcon, XCircleIcon } from "lucide-react";
+import { CheckIcon, Loader2Icon, PlayIcon, XIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { AgentGlyph, StatusBadge } from "@/components/bits";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { post, type ScenarioRun } from "@/lib/api";
@@ -15,16 +15,40 @@ import { useLive } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 
 const PLAN = [
-  "1-2 · Agent A tests API X and publishes a Memory Capsule",
-  "3 · Agent B independently verifies the memory",
-  "4-7 · Agent C searches memory, purchases access and picks an API",
+  { title: "Agent A tests API X and publishes a Memory Capsule", agent_id: "agent-a-researcher" },
+  { title: "Agent B independently verifies the memory", agent_id: "agent-b-verifier" },
+  { title: "Agent C searches memory, purchases access and picks an API", agent_id: "agent-c-developer" },
 ];
 
-function StepIcon({ status }: { status: string }) {
-  if (status === "succeeded") return <CheckCircle2Icon className="size-4 text-ok" />;
-  if (status === "failed") return <XCircleIcon className="size-4 text-bad" />;
-  if (status === "running") return <Loader2Icon className="size-4 animate-spin text-warn" />;
-  return <CircleDashedIcon className="size-4 text-muted-foreground" />;
+/** Strip the "1-2 · " step-number prefix the backend puts on titles. */
+const cleanTitle = (t: string) => t.replace(/^[\d-]+\s*·\s*/, "");
+
+function StepNode({ status, agentId }: { status: string; agentId?: string }) {
+  if (status === "succeeded")
+    return (
+      <span className="grid size-9 place-items-center rounded-full bg-ok text-white ring-4 ring-card">
+        <CheckIcon className="size-4" strokeWidth={3} />
+      </span>
+    );
+  if (status === "failed")
+    return (
+      <span className="grid size-9 place-items-center rounded-full bg-bad text-white ring-4 ring-card">
+        <XIcon className="size-4" strokeWidth={3} />
+      </span>
+    );
+  if (status === "running")
+    return (
+      <span className="grid size-9 place-items-center rounded-full bg-warn/15 text-warn ring-4 ring-card">
+        <Loader2Icon className="size-4 animate-spin" />
+      </span>
+    );
+  return agentId ? (
+    <span className="opacity-60">
+      <AgentGlyph id={agentId} />
+    </span>
+  ) : (
+    <span className="size-9 rounded-full border-2 border-dashed bg-card" />
+  );
 }
 
 export function ScenarioRunner() {
@@ -47,67 +71,81 @@ export function ScenarioRunner() {
     }
   }
 
-  const steps = run?.steps ?? [];
+  const steps = run?.steps?.length ? run.steps : PLAN.map((p) => ({ ...p, status: "idle" }));
   const s = run?.summary as Record<string, unknown> | null | undefined;
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-4">
-        <div className="space-y-1.5">
-          <CardTitle>End-to-end demonstration</CardTitle>
-          <CardDescription className="max-w-xl">
-            Agent A discovers API X is unreliable and publishes it, Agent B independently re-tests it, and Agent C buys the verified memory and picks API Y
-            without repeating the experiment. Controlled environment: API X fails 8/20 requests, API Y 1/20.
-          </CardDescription>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Switch id="inject" checked={inject} onCheckedChange={setInject} disabled={running} />
-            <Label htmlFor="inject" className="text-xs text-muted-foreground" title="Agent A also publishes a hasty 5-request claim about API Y, which verification should dispute">
-              Inject misleading claim
-            </Label>
+    <Card className="gap-5">
+      <CardHeader className="gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="space-y-1.5">
+            <div className="text-xs font-semibold tracking-[0.14em] text-primary uppercase">Live demo</div>
+            <CardTitle className="text-lg">One discovery, three agents, zero wasted work</CardTitle>
           </div>
-          <Button onClick={start} disabled={starting || running}>
+          <Button onClick={start} disabled={starting || running} className="rounded-full px-4">
             {running || starting ? <Loader2Icon className="animate-spin" /> : <PlayIcon />}
-            {running ? "Running…" : "Run scenario"}
+            {running ? "Running…" : run ? "Run again" : "Run scenario"}
           </Button>
         </div>
+        <p className="text-[13.5px] leading-relaxed text-muted-foreground">
+          Agent A finds that API X is unreliable and publishes it. Agent B re-tests it independently. Agent C buys the verified memory and goes straight to
+          API Y without repeating the experiment. The test environment is controlled: API X fails 8 of 20 requests, API Y fails 1 of 20.
+        </p>
+        <div className="flex items-center gap-3 rounded-xl bg-surface px-3.5 py-2.5 ring-1 ring-border">
+          <Switch id="inject" checked={inject} onCheckedChange={setInject} disabled={running} />
+          <Label htmlFor="inject" className="block flex-1 cursor-pointer text-[13px] leading-snug font-normal">
+            <span className="font-medium">Inject a misleading claim</span>
+            <span className="text-muted-foreground"> · Agent A also publishes a hasty claim about API Y, which verification should dispute</span>
+          </Label>
+        </div>
       </CardHeader>
+
       <CardContent className="space-y-5">
-        <ol className="space-y-2">
-          {(steps.length ? steps : PLAN.map((title) => ({ title, status: "idle", agent_id: "" }))).map((st, i) => {
+        <ol className="relative">
+          {steps.map((st, i) => {
             const r = (st as { result?: Record<string, unknown> }).result;
+            const err = (st as { error?: string }).error;
+            const last = i === steps.length - 1;
             return (
-              <li key={i} className={cn("flex items-start gap-3 rounded-md border px-3 py-2.5", st.status === "running" && "border-warn/30 bg-warn/5")}>
-                <span className="pt-0.5">
-                  <StepIcon status={st.status} />
-                </span>
-                {st.agent_id && <AgentGlyph id={st.agent_id} size="sm" />}
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm">{st.title}</div>
-                  {r && <StepResult r={r} />}
-                  {(st as { error?: string }).error && <div className="mt-1 text-xs text-bad">{(st as { error?: string }).error}</div>}
+              <li key={i} className="relative flex gap-4 pb-5 last:pb-0">
+                {!last && <span className={cn("absolute top-10 bottom-1 left-[17px] w-0.5 rounded-full", st.status === "succeeded" ? "bg-ok/40" : "bg-border")} />}
+                <StepNode status={st.status} agentId={st.agent_id} />
+                <div className={cn("min-w-0 flex-1 rounded-xl px-4 py-3 ring-1 ring-border transition-colors", st.status === "running" ? "bg-warn/6 ring-warn/30" : "bg-surface/70")}>
+                  <div className="flex flex-col-reverse items-start gap-2 sm:flex-row sm:gap-3">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        {st.agent_id && st.status !== "idle" && (
+                          <span className="hidden sm:inline-flex">
+                            <AgentGlyph id={st.agent_id} size="sm" />
+                          </span>
+                        )}
+                        <span className="text-[14px] font-medium">{cleanTitle(st.title)}</span>
+                      </div>
+                      {r && <StepResult r={r} />}
+                      {err && <div className="mt-1 text-xs text-bad">{err}</div>}
+                    </div>
+                    {st.status !== "idle" && <StatusBadge status={st.status} />}
+                  </div>
                 </div>
-                {st.status !== "idle" && <StatusBadge status={st.status} />}
               </li>
             );
           })}
         </ol>
 
         {run && run.status !== "running" && (
-          <div className={cn("rounded-lg border p-4", run.status === "succeeded" ? "border-ok/25 bg-ok/5" : "border-bad/25 bg-bad/5")}>
+          <div className={cn("animate-rise overflow-hidden rounded-2xl ring-1", run.status === "succeeded" ? "bg-ok/6 ring-ok/25" : "bg-bad/6 ring-bad/25")}>
             {run.status === "succeeded" && s ? (
-              <div className="grid gap-4 sm:grid-cols-4">
+              <div className="grid grid-cols-2 divide-border sm:grid-cols-4 sm:divide-x">
                 <Outcome label="Agent C chose" value={String(s.chosen_api ?? "—").toUpperCase()} tone="text-ok" />
-                <Outcome label="Avoided without re-testing" value={Object.keys((s.avoided_apis as object) ?? {}).join(", ").toUpperCase() || "—"} tone="text-bad" />
-                <Outcome label="Requests saved" value={`${s.requests_saved} / ${s.baseline_requests}`} />
-                <Outcome label="Agent A claimable reward" value={`${s.agent_a_claimable_near} Ⓝ`} tone="text-chain" />
+                <Outcome label="Skipped without re-testing" value={Object.keys((s.avoided_apis as object) ?? {}).join(", ").toUpperCase() || "—"} tone="text-bad" />
+                <Outcome label="Requests saved" value={`${s.requests_saved} of ${s.baseline_requests}`} />
+                <Outcome label="Agent A earned" value={`${s.agent_a_claimable_near} Ⓝ`} tone="text-chain" />
               </div>
             ) : (
-              <div className="text-sm text-bad">Scenario failed: {run.error}</div>
+              <div className="p-4 text-sm text-bad">Scenario failed: {run.error}</div>
             )}
-            <div className="mt-3 text-[11px] text-muted-foreground">
-              Run {run.id} · {run.network} · finished {timeAgo(run.finished_at)}
+            <div className="border-t border-border/60 px-4 py-2.5 text-[11.5px] text-muted-foreground">
+              Run <span className="font-mono">{run.id}</span> · {run.network} · finished {timeAgo(run.finished_at)}
             </div>
           </div>
         )}
@@ -118,9 +156,9 @@ export function ScenarioRunner() {
 
 function Outcome({ label, value, tone }: { label: string; value: string; tone?: string }) {
   return (
-    <div>
-      <div className="text-[11px] text-muted-foreground">{label}</div>
-      <div className={cn("mt-0.5 font-mono text-lg font-semibold", tone)}>{value}</div>
+    <div className="px-4 py-4">
+      <div className="text-xs text-muted-foreground">{label}</div>
+      <div className={cn("mt-1 font-[family-name:var(--font-display)] text-xl font-semibold tabular-nums", tone)}>{value}</div>
     </div>
   );
 }
@@ -132,8 +170,8 @@ function StepResult({ r }: { r: Record<string, unknown> }) {
   const pub = r.published_memories as string[] | undefined;
   if (pub?.length) bits.push(`published ${pub.join(", ")}`);
   const ver = r.verified as { memory_id: string; result?: string; measured?: number }[] | undefined;
-  ver?.forEach((v) => v.result && bits.push(`${v.memory_id}: ${v.result} (measured ${Math.round((v.measured ?? 0) * 100)}%)`));
+  ver?.forEach((v) => v.result && bits.push(`${v.memory_id}: ${v.result.toLowerCase()} (measured ${Math.round((v.measured ?? 0) * 100)}%)`));
   if (r.chosen_api) bits.push(`chose ${r.chosen_api} · ${r.requests_made} requests instead of ${r.baseline_requests}`);
   if (!bits.length) return null;
-  return <div className="mt-1 text-xs text-muted-foreground">{bits.join(" · ")}</div>;
+  return <div className="mt-1 text-[12.5px] leading-relaxed text-muted-foreground">{bits.join(" · ")}</div>;
 }

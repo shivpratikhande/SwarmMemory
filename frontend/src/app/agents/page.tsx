@@ -1,14 +1,15 @@
 "use client";
 
-import { Loader2Icon, PlayIcon } from "lucide-react";
+import { HistoryIcon, Loader2Icon, PlayIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/app-shell";
 import { AgentGlyph, ChainTag, Empty, Mono, StatusBadge } from "@/components/bits";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,12 +26,18 @@ const DEFAULT_TASK: Record<string, string> = {
 
 function Metric({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div>
-      <div className="text-[11px] text-muted-foreground">{label}</div>
-      <div className="font-mono text-sm tabular-nums">{value}</div>
+    <div className="rounded-xl bg-surface px-3 py-2.5 ring-1 ring-border/70">
+      <div className="text-[11.5px] text-muted-foreground">{label}</div>
+      <div className="mt-0.5 font-[family-name:var(--font-display)] text-[17px] font-semibold tabular-nums">{value}</div>
     </div>
   );
 }
+
+const ROLE_BLURB: Record<string, string> = {
+  researcher: "Runs real experiments and publishes what it learns",
+  verifier: "Re-tests claims independently, never reads the evidence",
+  developer: "Buys verified knowledge to skip wasted work",
+};
 
 function AgentCard({ a, onOpen }: { a: Agent; onOpen: () => void }) {
   const [task, setTask] = useState(DEFAULT_TASK[a.role]);
@@ -52,40 +59,55 @@ function AgentCard({ a, onOpen }: { a: Agent; onOpen: () => void }) {
   }
 
   return (
-    <Card className="flex flex-col">
-      <CardHeader className="flex flex-row items-start gap-3">
-        <AgentGlyph id={a.id} role={a.role} />
-        <div className="min-w-0 flex-1 space-y-1">
-          <CardTitle className="flex items-center gap-2 text-base">
-            {a.name} <StatusBadge status={a.status} />
-          </CardTitle>
-          <CardDescription>{ROLE_LABEL[a.role]}</CardDescription>
+    <Card className="lift flex flex-col gap-0 py-0">
+      <div className="relative px-5 pt-5 pb-4">
+        <div className="hero-surface absolute inset-x-0 top-0 h-16 opacity-70" />
+        <div className="relative flex items-start gap-3.5">
+          <AgentGlyph id={a.id} role={a.role} size="lg" />
+          <div className="min-w-0 flex-1 pt-0.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <h3 className="text-[17px] font-semibold">{a.name.split(" · ")[0]}</h3>
+              <StatusBadge status={a.status} />
+            </div>
+            <div className="text-[13px] font-medium text-primary">{ROLE_LABEL[a.role]}</div>
+          </div>
+          <Button variant="outline" size="sm" className="rounded-full" onClick={onOpen}>
+            <HistoryIcon /> History
+          </Button>
         </div>
-        <Button variant="ghost" size="sm" onClick={onOpen}>
-          History
-        </Button>
-      </CardHeader>
-      <CardContent className="flex flex-1 flex-col gap-5">
-        <div className="flex items-center gap-2 rounded-md border bg-background/40 px-3 py-2">
+        <p className="relative mt-3 text-[13px] text-muted-foreground">{ROLE_BLURB[a.role]}</p>
+      </div>
+      <CardContent className="flex flex-1 flex-col gap-4 pb-5">
+        <div className="flex items-center gap-2 rounded-xl bg-surface px-3 py-2 ring-1 ring-border/70">
           <ChainTag simulated={a.network !== "testnet"} />
-          <Mono className="truncate">{a.near_account_id}</Mono>
-          <span className={cn("ml-auto text-[11px]", a.onchain_registered ? "text-ok" : "text-warn")}>{a.onchain_registered ? "registered" : "unregistered"}</span>
+          <Mono className="truncate text-foreground/80">{a.near_account_id}</Mono>
+          <span className={cn("ml-auto inline-flex items-center gap-1 text-[11.5px] font-medium", a.onchain_registered ? "text-ok" : "text-warn")}>
+            <span className="size-1.5 rounded-full bg-current" />
+            {a.onchain_registered ? "Registered" : "Unregistered"}
+          </span>
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-2">
           <Metric label="Reputation" value={<span className={a.reputation < 0 ? "text-bad" : "text-ok"}>{a.reputation}</span>} />
-          <Metric label="Tasks completed" value={a.tasks_completed} />
-          <Metric label="Memories contributed" value={a.memories_contributed} />
-          <Metric label="Memories retrieved" value={a.memories_retrieved} />
-          <Metric label="Earned" value={`${a.earned_near} Ⓝ`} />
-          <Metric label="Spent" value={`${a.spent_near} Ⓝ`} />
+          <Metric label="Tasks" value={a.tasks_completed} />
+          <Metric label="Published" value={a.memories_contributed} />
+          <Metric label="Retrieved" value={a.memories_retrieved} />
+          <Metric label="Earned" value={<span className="text-chain">{a.earned_near}</span>} />
+          <Metric label="Spent" value={a.spent_near} />
         </div>
-        <p className="line-clamp-3 text-xs leading-relaxed text-muted-foreground" title={a.system_prompt}>
-          {a.system_prompt}
-        </p>
+        <details className="group rounded-xl ring-1 ring-border/70">
+          <summary className="cursor-pointer list-none px-3 py-2 text-[12.5px] font-medium text-muted-foreground hover:text-foreground">
+            <span className="group-open:hidden">Show system prompt</span>
+            <span className="hidden group-open:inline">Hide system prompt</span>
+          </summary>
+          <p className="border-t px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">{a.system_prompt}</p>
+        </details>
         <div className="mt-auto space-y-2 border-t pt-4">
-          <Textarea value={task} onChange={(e) => setTask(e.target.value)} rows={2} className="resize-none text-sm" />
-          {a.role === "researcher" && <Input value={apis} onChange={(e) => setApis(e.target.value)} className="font-mono text-xs" title="Services to test" />}
-          <Button onClick={execute} disabled={busy || a.status === "running"} className="w-full">
+          <Label className="text-xs text-muted-foreground">Task</Label>
+          <Textarea value={task} onChange={(e) => setTask(e.target.value)} rows={2} className="resize-none bg-surface text-sm" />
+          {a.role === "researcher" && (
+            <Input value={apis} onChange={(e) => setApis(e.target.value)} className="bg-surface font-mono text-xs" title="Services to test" placeholder="Services to test" />
+          )}
+          <Button onClick={execute} disabled={busy || a.status === "running"} className="h-10 w-full rounded-xl">
             {busy || a.status === "running" ? <Loader2Icon className="animate-spin" /> : <PlayIcon />}
             {a.status === "running" ? "Executing…" : "Execute task"}
           </Button>
@@ -98,14 +120,14 @@ function AgentCard({ a, onOpen }: { a: Agent; onOpen: () => void }) {
 function ExecutionItem({ e }: { e: Execution }) {
   const [open, setOpen] = useState(e.status === "running");
   return (
-    <div className="rounded-lg border">
+    <div className="overflow-hidden rounded-xl ring-1 ring-border">
       <button className="flex w-full items-center gap-2 px-3 py-2.5 text-left" onClick={() => setOpen(!open)}>
         <StatusBadge status={e.status} />
         <span className="min-w-0 flex-1 truncate text-sm">{e.task}</span>
         <span className="text-[11px] text-muted-foreground">{timeAgo(e.started_at)}</span>
       </button>
       {open && (
-        <div className="border-t bg-background/50 px-3 py-2">
+        <div className="border-t bg-surface px-3 py-2.5">
           <ol className="space-y-1 font-mono text-[11px] leading-relaxed">
             {e.logs.map((l, i) => (
               <li key={i} className="flex gap-3">
@@ -134,11 +156,11 @@ function AgentSheet({ id, onClose }: { id: string | null; onClose: () => void })
           {data && (
             <div className="space-y-6 pb-8">
               <section className="space-y-2">
-                <h3 className="text-xs tracking-wide text-muted-foreground uppercase">Executions</h3>
+                <h3 className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Executions</h3>
                 {data.executions.length ? data.executions.map((e) => <ExecutionItem key={e.id} e={e} />) : <Empty>No executions yet.</Empty>}
               </section>
               <section className="space-y-2">
-                <h3 className="text-xs tracking-wide text-muted-foreground uppercase">Memory history</h3>
+                <h3 className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Memory history</h3>
                 {data.memories.length ? (
                   data.memories.map((m) => (
                     <div key={m.memory_id} className="flex items-center gap-2 text-sm">
@@ -152,7 +174,7 @@ function AgentSheet({ id, onClose }: { id: string | null; onClose: () => void })
                 )}
               </section>
               <section className="space-y-2">
-                <h3 className="text-xs tracking-wide text-muted-foreground uppercase">Reputation</h3>
+                <h3 className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">Reputation</h3>
                 {data.reputation_events.map((r, i) => (
                   <div key={i} className="flex items-center gap-2 text-sm">
                     <span className={cn("w-10 font-mono", r.delta > 0 ? "text-ok" : "text-bad")}>{r.delta > 0 ? `+${r.delta}` : r.delta}</span>
@@ -162,8 +184,8 @@ function AgentSheet({ id, onClose }: { id: string | null; onClose: () => void })
                 ))}
               </section>
               <section className="space-y-2">
-                <h3 className="text-xs tracking-wide text-muted-foreground uppercase">On-chain identity (contract read)</h3>
-                <pre className="overflow-x-auto rounded-md border bg-background/60 p-3 font-mono text-[11px] text-muted-foreground">{JSON.stringify(data.onchain, null, 2)}</pre>
+                <h3 className="text-[11px] font-semibold tracking-[0.12em] text-muted-foreground uppercase">On-chain identity (contract read)</h3>
+                <pre className="overflow-x-auto rounded-xl bg-surface p-3 font-mono ring-1 ring-border text-[11px] text-muted-foreground">{JSON.stringify(data.onchain, null, 2)}</pre>
               </section>
             </div>
           )}
@@ -179,10 +201,11 @@ export default function AgentsPage() {
   return (
     <>
       <PageHeader
+        eyebrow="Network"
         title="Agent Swarm"
-        description="Three independent agents with their own NEAR identities and API credentials. They only coordinate through the SwarmMemory API."
+        description="Three independent agents, each with its own NEAR identity and API key. They never talk to each other directly. They only coordinate through shared memory."
       />
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-5 lg:grid-cols-3">
         {data ? data.map((a) => <AgentCard key={a.id} a={a} onOpen={() => setOpen(a.id)} />) : Array.from({ length: 3 }).map((_, i) => <Card key={i} className="h-96 animate-pulse" />)}
       </div>
       <AgentSheet id={open} onClose={() => setOpen(null)} />

@@ -33,7 +33,7 @@ export function RequestGrid({ requests, className }: { requests: Evidence["reque
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="space-y-1">
-      <div className="text-[11px] tracking-wide text-muted-foreground uppercase">{label}</div>
+      <div className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">{label}</div>
       <div className="text-sm">{children}</div>
     </div>
   );
@@ -53,7 +53,7 @@ function EvidenceView({ ev }: { ev: Evidence }) {
       </div>
       <RequestGrid requests={ev.requests} />
       {ev.logs?.length > 0 && (
-        <ScrollArea className="h-40 rounded-md border bg-background/60">
+        <ScrollArea className="h-40 rounded-xl bg-surface ring-1 ring-border/70">
           <pre className="p-3 font-mono text-[11px] leading-relaxed text-muted-foreground">{ev.logs.join("\n")}</pre>
         </ScrollArea>
       )}
@@ -83,11 +83,11 @@ export function MemoryDialog({ memoryId, onOpenChange, unlocked }: { memoryId: s
                   <span className="text-xs text-muted-foreground">{CATEGORY_LABEL[m.category] ?? m.category}</span>
                   {m.version > 1 && <span className="text-xs text-muted-foreground">· v{m.version}</span>}
                 </div>
-                <DialogTitle className="text-lg leading-snug">{m.title}</DialogTitle>
+                <DialogTitle className="text-xl leading-snug font-semibold">{m.title}</DialogTitle>
                 <DialogDescription>{m.description}</DialogDescription>
               </DialogHeader>
 
-              <div className="grid grid-cols-2 gap-4 rounded-lg border bg-background/40 p-4 sm:grid-cols-4">
+              <div className="grid grid-cols-2 gap-4 rounded-xl bg-surface ring-1 ring-border/70 p-4 sm:grid-cols-4">
                 <Field label="Confidence">
                   <Confidence value={m.confidence_score} />
                 </Field>
@@ -109,7 +109,7 @@ export function MemoryDialog({ memoryId, onOpenChange, unlocked }: { memoryId: s
                 </TabsList>
 
                 <TabsContent value="claim" className="space-y-4 pt-3">
-                  <div className="rounded-lg border bg-background/40 p-4">
+                  <div className="rounded-xl bg-surface ring-1 ring-border/70 p-4">
                     <div className="mb-2 text-[11px] tracking-wide text-muted-foreground uppercase">Falsifiable claim (public)</div>
                     <div className="font-mono text-sm">{claimText(m.claim)}</div>
                     <div className="mt-2 text-xs text-muted-foreground">
@@ -140,7 +140,7 @@ export function MemoryDialog({ memoryId, onOpenChange, unlocked }: { memoryId: s
                   {m.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
                       {m.tags.map((t) => (
-                        <span key={t} className="rounded border px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                        <span key={t} className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
                           {t}
                         </span>
                       ))}
@@ -153,14 +153,14 @@ export function MemoryDialog({ memoryId, onOpenChange, unlocked }: { memoryId: s
                     <>
                       <Field label="Original observation">{full.original_observation}</Field>
                       <Field label="Execution context">
-                        <pre className="overflow-x-auto rounded-md border bg-background/60 p-3 font-mono text-[11px] text-muted-foreground">
+                        <pre className="overflow-x-auto rounded-xl bg-surface ring-1 ring-border/70 p-3 font-mono text-[11px] text-muted-foreground">
                           {JSON.stringify(full.execution_context, null, 2)}
                         </pre>
                       </Field>
                       <EvidenceView ev={full.evidence} />
                     </>
                   ) : (
-                    <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed px-6 py-10 text-center">
+                    <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed bg-surface/60 px-6 py-10 text-center">
                       <LockIcon className="size-5 text-muted-foreground" />
                       <div className="text-sm">The observation, execution context and raw evidence are paid content.</div>
                       <div className="max-w-md text-xs text-muted-foreground">
@@ -175,7 +175,7 @@ export function MemoryDialog({ memoryId, onOpenChange, unlocked }: { memoryId: s
                 <TabsContent value="verifications" className="space-y-3 pt-3">
                   {data.verifications.length === 0 && <Empty>No independent verification yet.</Empty>}
                   {data.verifications.map((v) => (
-                    <div key={v.id} className="space-y-3 rounded-lg border bg-background/40 p-4">
+                    <div key={v.id} className="space-y-3 rounded-xl bg-surface ring-1 ring-border/70 p-4">
                       <div className="flex flex-wrap items-center gap-2">
                         {v.verification_result === "CONFIRMED" ? <ShieldCheckIcon className="size-4 text-ok" /> : <ShieldXIcon className="size-4 text-bad" />}
                         <StatusBadge status={v.verification_result} />
@@ -204,7 +204,7 @@ export function MemoryDialog({ memoryId, onOpenChange, unlocked }: { memoryId: s
 
                 <TabsContent value="ledger" className="space-y-4 pt-3">
                   <Field label="On-chain record (live contract read)">
-                    <pre className="overflow-x-auto rounded-md border bg-background/60 p-3 font-mono text-[11px] text-muted-foreground">
+                    <pre className="overflow-x-auto rounded-xl bg-surface ring-1 ring-border/70 p-3 font-mono text-[11px] text-muted-foreground">
                       {chain === undefined ? "loading…" : JSON.stringify(chain, null, 2)}
                     </pre>
                   </Field>

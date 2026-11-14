@@ -30,16 +30,17 @@ export function MemoryTable({ rows, onOpen, extra }: { rows: Memory[] | undefine
               <Mono className="text-muted-foreground">{m.seq}</Mono>
             </TableCell>
             <TableCell className="max-w-md">
-              <div className="truncate font-medium">{m.title}</div>
-              <div className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
-                <span>{CATEGORY_LABEL[m.category] ?? m.category}</span>·<Mono>{claimText(m.claim)}</Mono>
-                {m.similarity !== null && <span className="text-primary">· {pct(m.similarity)} match</span>}
+              <div className="truncate text-[14px] font-medium">{m.title}</div>
+              <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                <span>{CATEGORY_LABEL[m.category] ?? m.category}</span>
+                <Mono className="rounded-md bg-surface px-1.5 py-0.5 text-[11px] text-foreground/75 ring-1 ring-border/70">{claimText(m.claim)}</Mono>
+                {m.similarity !== null && <span className="font-medium text-primary">{pct(m.similarity)} match</span>}
               </div>
             </TableCell>
             <TableCell>
               <div className="flex items-center gap-2">
                 <AgentGlyph id={m.contributor_agent_id} size="sm" />
-                <span className="text-xs">{m.contributor_name}</span>
+                <span className="text-[13px]">{(m.contributor_name ?? m.contributor_agent_id).split(" · ")[0]}</span>
               </div>
             </TableCell>
             <TableCell>
@@ -50,10 +51,12 @@ export function MemoryTable({ rows, onOpen, extra }: { rows: Memory[] | undefine
               <Confidence value={m.confidence_score} />
             </TableCell>
             <TableCell className="text-right font-mono text-xs">
-              <span className="text-ok">{m.confirm_count}</span>/<span className="text-bad">{m.dispute_count}</span>
+              <span className="text-ok">{m.confirm_count}</span>
+              <span className="text-muted-foreground/60"> / </span>
+              <span className="text-bad">{m.dispute_count}</span>
             </TableCell>
             <TableCell className="text-right font-mono text-xs">{m.usage_count}</TableCell>
-            <TableCell className="text-right font-mono text-xs">{m.access_type === "free" ? "free" : `${m.price_near} Ⓝ`}</TableCell>
+            <TableCell className="text-right text-[13px] font-medium tabular-nums">{m.access_type === "free" ? "Free" : `${m.price_near} Ⓝ`}</TableCell>
             {extra && <TableCell onClick={(e) => e.stopPropagation()}>{extra(m)}</TableCell>}
           </TableRow>
         ))}

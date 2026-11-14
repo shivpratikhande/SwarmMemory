@@ -28,6 +28,7 @@ export default function TransactionsPage() {
   return (
     <>
       <PageHeader
+        eyebrow="Ledger"
         title="Transaction Explorer"
         description={
           sim
@@ -37,7 +38,7 @@ export default function TransactionsPage() {
         actions={
           <>
             <Select value={method} onValueChange={setMethod}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="h-9! w-48 rounded-full bg-card">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -50,7 +51,7 @@ export default function TransactionsPage() {
               </SelectContent>
             </Select>
             <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="h-9! w-36 rounded-full bg-card">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -93,7 +94,7 @@ export default function TransactionsPage() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Mono>{t.method}</Mono>
+                      <Mono className="rounded-md bg-surface px-1.5 py-0.5 ring-1 ring-border/70">{t.method}</Mono>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -124,7 +125,7 @@ export default function TransactionsPage() {
               <Mono className="text-base">{sel?.method}</Mono> {sel && <StatusBadge status={sel.status} />}
             </DialogTitle>
           </DialogHeader>
-          {sel && <pre className="max-h-[60vh] overflow-auto rounded-md border bg-background/60 p-3 font-mono text-[11px] text-muted-foreground">{JSON.stringify(sel, null, 2)}</pre>}
+          {sel && <pre className="max-h-[60vh] overflow-auto rounded-xl bg-surface p-3 font-mono ring-1 ring-border text-[11px] text-muted-foreground">{JSON.stringify(sel, null, 2)}</pre>}
         </DialogContent>
       </Dialog>
     </>

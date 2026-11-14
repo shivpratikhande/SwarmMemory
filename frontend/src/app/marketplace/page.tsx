@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { post, type Memory, type Purchase, type Tx } from "@/lib/api";
 import { CATEGORY_LABEL, claimText, timeAgo } from "@/lib/format";
 import { useLive } from "@/lib/hooks";
+import { cn } from "@/lib/utils";
 import { PENDING_PURCHASE_KEY } from "@/lib/wallet";
 
 /** Finish a purchase after a browser wallet (e.g. MyNearWallet) redirects back with the tx hash. */
@@ -41,32 +42,37 @@ function useWalletReturn(onUnlocked: (m: Memory) => void) {
 
 function Listing({ m, onOpen }: { m: Memory; onOpen: () => void }) {
   return (
-    <Card className="cursor-pointer gap-4 transition-colors hover:border-foreground/15" onClick={onOpen}>
-      <CardHeader className="gap-2">
+    <Card className={cn("lift cursor-pointer gap-4", m.status === "DISPUTED" && "opacity-80")} onClick={onOpen}>
+      <CardHeader className="gap-3">
         <div className="flex items-center gap-2">
-          <Mono className="text-muted-foreground">#{m.seq}</Mono>
           <StatusBadge status={m.status} />
-          <span className="text-xs text-muted-foreground">{CATEGORY_LABEL[m.category]}</span>
-          <span className="ml-auto font-mono text-sm font-semibold">{m.access_type === "free" ? "Free" : `${m.price_near} Ⓝ`}</span>
+          <span className="rounded-full bg-muted px-2 py-0.5 text-[11.5px] text-muted-foreground">{CATEGORY_LABEL[m.category]}</span>
+          <Mono className="ml-auto text-muted-foreground">#{m.seq}</Mono>
         </div>
-        <CardTitle className="text-[15px] leading-snug">{m.title}</CardTitle>
+        <CardTitle className="text-[16px] leading-snug font-semibold">{m.title}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="line-clamp-2 text-sm text-muted-foreground">{m.description}</p>
-        <div className="rounded-md border bg-background/40 px-3 py-2 font-mono text-xs">{claimText(m.claim)}</div>
+        <div className="rounded-xl bg-surface px-3 py-2 font-mono text-xs ring-1 ring-border/70">{claimText(m.claim)}</div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">
-            <AgentGlyph id={m.contributor_agent_id} size="sm" /> {m.contributor_name} · rep {m.contributor_reputation}
+            <AgentGlyph id={m.contributor_agent_id} size="sm" /> {(m.contributor_name ?? m.contributor_agent_id).split(" · ")[0]} · rep {m.contributor_reputation}
           </span>
-          <Confidence value={m.confidence_score} />
           <span>
-            {m.confirm_count}✓ {m.dispute_count}✗
+            <span className="text-ok">{m.confirm_count} confirmed</span> · <span className="text-bad">{m.dispute_count} disputed</span>
           </span>
           <span>{m.purchase_count ?? 0} purchases</span>
         </div>
-        <Button variant={m.purchasable ? "default" : "secondary"} size="sm" className="w-full" disabled={!m.purchasable}>
-          {m.purchasable ? "Inspect & buy" : m.status === "DISPUTED" ? "Disputed — not for sale" : "Inspect"}
-        </Button>
+        <Confidence value={m.confidence_score} wide />
+        <div className="flex items-center gap-3 border-t pt-4">
+          <div>
+            <div className="text-[11px] text-muted-foreground">Price</div>
+            <div className="font-[family-name:var(--font-display)] text-xl font-semibold">{m.access_type === "free" ? "Free" : `${m.price_near} Ⓝ`}</div>
+          </div>
+          <Button variant={m.purchasable ? "default" : "secondary"} className="ml-auto rounded-full px-4" disabled={!m.purchasable}>
+            {m.purchasable ? "Inspect & buy" : m.status === "DISPUTED" ? "Disputed, not for sale" : "Inspect"}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
@@ -87,10 +93,11 @@ export default function MarketplacePage() {
   return (
     <>
       <PageHeader
+        eyebrow="Knowledge"
         title="Marketplace"
-        description="Buy verified experience instead of re-learning it. Payment goes to the contract, the contributor's reward is credited on-chain, and the backend checks the entitlement on-chain before releasing content."
+        description="Buy verified experience instead of re-learning it. Payment goes to the contract, the contributor is credited on-chain, and content is released only after the contract confirms your access."
       />
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {data ? data.map((m) => <Listing key={m.memory_id} m={m} onOpen={() => setOpen(m.memory_id)} />) : Array.from({ length: 3 }).map((_, i) => <Card key={i} className="h-72 animate-pulse" />)}
       </div>
       {data && !data.length && <Empty>No memories listed yet. Run the demo scenario from the Overview page.</Empty>}
@@ -107,7 +114,7 @@ export default function MarketplacePage() {
               {purchases.map((p) => {
                 const t = p.tx_id ? txById.get(p.tx_id) : undefined;
                 return (
-                  <div key={p.id} className="flex flex-wrap items-center gap-3 py-2.5 text-sm">
+                  <div key={p.id} className="flex flex-wrap items-center gap-3 py-3 text-sm">
                     {p.buyer_agent_id ? <AgentGlyph id={p.buyer_agent_id} size="sm" /> : <span className="text-xs text-muted-foreground">wallet</span>}
                     <Mono>{p.buyer_account_id}</Mono>
                     <span className="text-muted-foreground">bought</span>
